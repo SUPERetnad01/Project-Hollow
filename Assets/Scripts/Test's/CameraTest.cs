@@ -9,31 +9,37 @@ public class CameraTest : MonoBehaviour
     [SerializeField]
     private const float Y_ANGLE_MAX = 50.0f;
 
+    public bool lockCursor;
     public Transform lookAt;
     public Transform camTransform;
-    public float distance = 10.0f;
+    public float dstFromTarget = 5f;
+    public float dstFactor = .8f;
+
+    public float rotationSmoothTime = .12f;
+    Vector3 rotationSmoothVelocity;
+    Vector3 currentRotation;
+
+    public Vector2 distanceMinMax = new Vector2(1f, 4f);
+    Vector3 dollyDir;
 
     private float currentX = 0.0f;
     private float currentY = 45.0f;
-    //private float sensitivityX = 4.0f;
-    //private float sensitivityY = 1.0f;
+    private float sensitivityX = 4.0f;
+    private float sensitivityY = 1.0f;
 
     private void Awake()
     {
-        camTransform = transform;
-    }
-
-    private void Update()
-    {
-        CamPan();
+        //camTransform = transform;
+        if (lockCursor)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     private void LateUpdate()
     {
-        Vector3 dir = new Vector3(0, 0, -distance);
-        Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
-        camTransform.position = lookAt.position + rotation * dir;
-        camTransform.LookAt(lookAt.position);
+        CamPan();
     }
 
     /// <summary>
@@ -41,9 +47,13 @@ public class CameraTest : MonoBehaviour
     /// </summary>
     void CamPan()
     {
-        currentX += Input.GetAxis("Look Horizontal");
-        currentY += Input.GetAxis("Look Vertical");
-
+        currentX += Input.GetAxis("Look Horizontal") * sensitivityX ;
+        currentY += Input.GetAxis("Look Vertical") * sensitivityY;
         currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
+
+        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(currentY, currentX), ref rotationSmoothVelocity, rotationSmoothTime);
+        transform.eulerAngles = currentRotation;
+
+        transform.position = lookAt.position - transform.forward * dstFromTarget;
     }
 }

@@ -12,8 +12,6 @@ using UnityEngine;
 /// </summary>
 public class MoveTest : MonoBehaviour
 {
-    //private Animator animator;
-
     [SerializeField]
     private float moveSpeed = 7.5f;
     [SerializeField]
@@ -26,17 +24,22 @@ public class MoveTest : MonoBehaviour
     private float dashDistance = 5f;
     [SerializeField]
     private float fallMultiplier = 2.5f;
+    [Range(0, 1)]
+    public float airControlPercent;
 
     public LayerMask Ground;
 
+    //private Animator animator;
+    private Transform _camera;
     private Rigidbody _body;
-    private Vector3 _inputs = Vector3.zero;
+    private Vector3 _input = Vector3.zero;
     private bool _isGrounded = true;
     private Transform _groundChecker;
 
     private void Awake()
     {
         //animator = GetComponentInChildren<Animator>();
+        _camera = Camera.main.transform;
         _body = GetComponent<Rigidbody>();
         _groundChecker = transform;
     }
@@ -61,14 +64,16 @@ public class MoveTest : MonoBehaviour
 
         _isGrounded = Physics.CheckSphere(_groundChecker.position, groundDistance, Ground, QueryTriggerInteraction.Ignore);
 
-        _inputs = Vector3.zero;
-        _inputs.x = Input.GetAxis("Horizontal");
-        _inputs.z = Input.GetAxis("Vertical");
+        _input = Vector3.zero;
+        _input.x = Input.GetAxis("Horizontal");
+        _input.z = Input.GetAxis("Vertical");
 
-        if (_inputs != Vector3.zero)
-            transform.forward = _inputs;
-
-        var movement = new Vector3(_inputs.x, 0, _inputs.z);
+        if (_input != Vector3.zero)
+        {
+            transform.forward = _input;
+        }
+            
+        var movement = new Vector3(_input.x, 0, _input.z);
 
         if (Input.GetButtonDown("Jump") && _isGrounded)
         {
@@ -84,16 +89,16 @@ public class MoveTest : MonoBehaviour
         if (movement.magnitude > 0)
         {
             Quaternion newDirection = Quaternion.LookRotation(movement);
-
             transform.rotation = Quaternion.Slerp(transform.rotation, newDirection, Time.deltaTime * turnSpeed);
         }
     }
+
     /// <summary>
     /// MOVE physics function
     /// </summary>
     void MOVEPhysics()
     {
-        _body.MovePosition(_body.position + _inputs * moveSpeed * Time.fixedDeltaTime);
+        _body.MovePosition(_body.position + _input * moveSpeed * Time.fixedDeltaTime);
         _body.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
     }
 }
