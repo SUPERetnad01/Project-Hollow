@@ -11,7 +11,6 @@ public class CameraTest : MonoBehaviour
 
     public bool lockCursor;
     public Transform lookAt;
-    public Transform camTransform;
     public float dstFromTarget = 5f;
     public float dstFactor = .8f;
 

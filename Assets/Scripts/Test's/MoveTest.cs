@@ -4,10 +4,9 @@ using UnityEngine;
 
 
 /// <summary>
-/// Test Player script Will be rewritten after test purpose is completed
+/// Test Player script Will be rewritten and refactored after test purpose is completed
 /// 
-/// Bug: Jumping & Dashing doesn't work
-/// jumping only worky with default layer and but grounded function is always returns true then
+/// Bug: Dashing doesn't work
 /// 
 /// </summary>
 public class MoveTest : MonoBehaviour
@@ -15,7 +14,7 @@ public class MoveTest : MonoBehaviour
     [SerializeField]
     private float moveSpeed = 7.5f;
     [SerializeField]
-    private float turnSpeed = 15f;
+    private float rotationSpeed = 15f;
     [SerializeField]
     private float jumpHeight = 6f;
     [SerializeField]
@@ -27,10 +26,12 @@ public class MoveTest : MonoBehaviour
     [Range(0, 1)]
     public float airControlPercent;
 
+    public Vector3 desiredMoveDirection;
+    public bool blockRotationPlayer;
     public LayerMask Ground;
 
     //private Animator animator;
-    private Transform _camera;
+    private Camera _camera;
     private Rigidbody _body;
     private Vector3 _input = Vector3.zero;
     private bool _isGrounded = true;
@@ -39,7 +40,7 @@ public class MoveTest : MonoBehaviour
     private void Awake()
     {
         //animator = GetComponentInChildren<Animator>();
-        _camera = Camera.main.transform;
+        _camera = Camera.main;
         _body = GetComponent<Rigidbody>();
         _groundChecker = transform;
     }
@@ -65,15 +66,12 @@ public class MoveTest : MonoBehaviour
         _isGrounded = Physics.CheckSphere(_groundChecker.position, groundDistance, Ground, QueryTriggerInteraction.Ignore);
 
         _input = Vector3.zero;
-        _input.x = Input.GetAxis("Horizontal");
-        _input.z = Input.GetAxis("Vertical");
+        _input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        CamLock();
 
         if (_input != Vector3.zero)
-        {
             transform.forward = _input;
-        }
-            
-        var movement = new Vector3(_input.x, 0, _input.z);
 
         if (Input.GetButtonDown("Jump") && _isGrounded)
         {
@@ -86,10 +84,12 @@ public class MoveTest : MonoBehaviour
             _body.AddForce(dashVelocity, ForceMode.VelocityChange);
         }
 
-        if (movement.magnitude > 0)
+        if (desiredMoveDirection.magnitude > 0)
         {
-            Quaternion newDirection = Quaternion.LookRotation(movement);
-            transform.rotation = Quaternion.Slerp(transform.rotation, newDirection, Time.deltaTime * turnSpeed);
+            if (blockRotationPlayer == false)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), rotationSpeed); //Points in direction relative to the camera
+            }
         }
     }
 
@@ -98,8 +98,28 @@ public class MoveTest : MonoBehaviour
     /// </summary>
     void MOVEPhysics()
     {
-        _body.MovePosition(_body.position + _input * moveSpeed * Time.fixedDeltaTime);
+        CamLock();
+        _body.MovePosition(_body.position + desiredMoveDirection * moveSpeed * Time.fixedDeltaTime); //Moves us it the desiredWay
         _body.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+    }
+
+
+    /// <summary>
+    /// Calculate player rotation to be relative to camera rotation
+    /// </summary>
+    void CamLock()
+    {
+        var camera = Camera.main;
+        var forward = _camera.transform.forward;
+        var right = _camera.transform.right;
+
+        forward.y = 0f;
+        right.y = 0f;
+
+        forward.Normalize();
+        right.Normalize();
+
+        desiredMoveDirection = forward * _input.z + right * _input.x;
     }
 }
 
