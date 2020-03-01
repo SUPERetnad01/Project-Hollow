@@ -6,5 +6,5 @@ The story it self won't be releaved here.
 
 Project Details:
 -------------------------
-Unity version: 2019.3.3f1
-For co-operation/participation Messages us for details.
+ - Unity version: 2019.3.3f1
+ - For co-operation/participation Messages us for details.
