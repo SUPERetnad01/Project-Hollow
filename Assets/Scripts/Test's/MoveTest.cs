@@ -9,6 +9,7 @@ using UnityEngine;
 /// Bug: Dashing doesn't work
 /// 
 /// </summary>
+[AddComponentMenu("Mythirial Test/Move Test")]
 public class MoveTest : MonoBehaviour
 {
     [SerializeField]
@@ -37,6 +38,9 @@ public class MoveTest : MonoBehaviour
     private bool _isGrounded = true;
     private Transform _groundChecker;
 
+    /// <summary>
+    /// Called in when this enters the scene
+    /// </summary>
     private void Awake()
     {
         //animator = GetComponentInChildren<Animator>();
@@ -50,6 +54,9 @@ public class MoveTest : MonoBehaviour
         MOVE();
     }
 
+    /// <summary>
+    /// update meant for Physics related coding
+    /// </summary>
     private void FixedUpdate()
     {
         MOVEPhysics();
@@ -99,7 +106,7 @@ public class MoveTest : MonoBehaviour
     void MOVEPhysics()
     {
         CamLock();
-        _body.MovePosition(_body.position + desiredMoveDirection * moveSpeed * Time.fixedDeltaTime); //Moves us it the desiredWay
+        _body.MovePosition(_body.position + desiredMoveDirection * moveSpeed * Time.fixedDeltaTime); //Moves us in the desiredWay
         _body.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
     }
 

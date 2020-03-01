@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("Mythirial Test/Camera Test")]
 public class CameraTest : MonoBehaviour
 {
     [SerializeField]
@@ -18,7 +19,7 @@ public class CameraTest : MonoBehaviour
     Vector3 rotationSmoothVelocity;
     Vector3 currentRotation;
 
-    public Vector2 distanceMinMax = new Vector2(1f, 4f);
+    public Vector2 dstMinMax = new Vector2(1f, 4f);
     Vector3 dollyDir;
 
     private float currentX = 0.0f;
@@ -28,7 +29,9 @@ public class CameraTest : MonoBehaviour
 
     private void Awake()
     {
-        //camTransform = transform;
+        dollyDir = transform.localPosition.normalized;
+        dstFromTarget = transform.localPosition.magnitude;
+
         if (lockCursor)
         {
             Cursor.lockState = CursorLockMode.Locked;
@@ -46,13 +49,29 @@ public class CameraTest : MonoBehaviour
     /// </summary>
     void CamPan()
     {
+        //CollisionDetect();
         currentX += Input.GetAxis("Look Horizontal") * sensitivityX ;
         currentY += Input.GetAxis("Look Vertical") * sensitivityY;
         currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
-
+       
         currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(currentY, currentX), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
         transform.position = lookAt.position - transform.forward * dstFromTarget;
+        //transform.localPosition = Vector3.Lerp(transform.localPosition, dollyDir * dstFromTarget, Time.deltaTime * rotationSmoothTime);
+    }
+
+    /// <summary>
+    /// Detecting collision on the camera side
+    /// </summary>
+    void CollisionDetect()
+    {
+        var desiredCameraPos = transform.parent.TransformPoint(dollyDir * dstMinMax.y);
+        RaycastHit hit;
+
+        if (Physics.Linecast(transform.parent.position, desiredCameraPos, out hit))
+            dstFromTarget = Mathf.Clamp((hit.distance * dstFactor), dstMinMax.x, dstMinMax.y);
+        else
+            dstFromTarget = dstMinMax.y;
     }
 }
