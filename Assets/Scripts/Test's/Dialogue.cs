@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
+    /// <summary>
+    /// Dialogue Data Class
+    /// </summary>
     [System.Serializable]
     public class Dialogue
     {
