@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -48,7 +50,18 @@ namespace Assets.Scripts
             }
 
             var sentence = _sentences.Dequeue();
-            DialogueText.text = sentence;
+            StopAllCoroutines();
+            StartCoroutine(TypeSentence(sentence));
+        }
+
+        private IEnumerator TypeSentence(string sentence)
+        {
+            DialogueText.text = String.Empty;
+            foreach (var letter in sentence.ToCharArray())
+            {
+                DialogueText.text += letter;
+                yield return null;
+            }
         }
     }
 }
