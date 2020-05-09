@@ -21,6 +21,11 @@ namespace Assets.Scripts
             _sentences = new Queue<string>();
         }
 
+        /// <summary>
+        /// Trigger for the start of a conversation
+        /// show's the dialogue box with the name and first sentence
+        /// </summary>
+        /// <param name="dialogue"></param>
         public void StartDialogue(Dialogue dialogue)
         {
             Animator.SetBool("IsOpen", true);
@@ -35,12 +40,17 @@ namespace Assets.Scripts
             DisplayNextSentence();
         }
 
+        /// <summary>
+        /// Trigger for the end of a conversation
+        /// </summary>
         public void EndDialogue()
         {
             Animator.SetBool("IsOpen", false);
-            Debug.Log("End of Conversation.");
         }
 
+        /// <summary>
+        /// Display Next sentence in the conversation
+        /// </summary>
         public void DisplayNextSentence()
         {
             if (_sentences.Count == 0)
@@ -53,7 +63,11 @@ namespace Assets.Scripts
             StopAllCoroutines();
             StartCoroutine(TypeSentence(sentence));
         }
-
+        /// <summary>
+        /// A Co-routine Animates sentences by letter
+        /// </summary>
+        /// <param name="sentence">sentence to animate</param>
+        /// <returns></returns>
         private IEnumerator TypeSentence(string sentence)
         {
             DialogueText.text = String.Empty;
