@@ -1,6 +1,6 @@
 # Project-Hollow
-A slice of life RPG.
-with cel shaded graphics
+A slice of life RPG.  
+with cell shaded graphics
 
 Welcome to the Island of Islandname(subject to change).
 The story it self won't be releaved here.
