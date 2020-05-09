@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts
 {
-    public class DialogueManager : MonoBehaviour
+    public class DialogueManager : Singleton<DialogueManager>
     {
         public Text NameText;
         public Text DialogueText;
@@ -14,6 +14,8 @@ namespace Assets.Scripts
         public Animator Animator;
 
         private Queue<string> _sentences;
+        
+        private DialogueManager(){}
 
         // Start is called before the first frame update
         void Start()
