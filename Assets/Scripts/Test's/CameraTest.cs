@@ -16,10 +16,11 @@ namespace Assets.Scripts
         public float dstFactor = .8f;
 
         public float rotationSmoothTime = .12f;
+		public float depthSmoothTime = 1;
         Vector3 rotationSmoothVelocity;
         Vector3 currentRotation;
 
-        public Vector2 dstMinMax = new Vector2(1f, 4f);
+        public float dstMax = 5f;
         Vector3 dollyDir;
 
         private float currentX = 0.0f;
@@ -49,7 +50,7 @@ namespace Assets.Scripts
         /// </summary>
         void CamPan()
         {
-            //CollisionDetect();
+            CollisionDetect();
             currentX += Input.GetAxis("Look Horizontal") * sensitivityX ;
             currentY += Input.GetAxis("Look Vertical") * sensitivityY;
             currentY = Mathf.Clamp(currentY, Y_ANGLE_MIN, Y_ANGLE_MAX);
@@ -57,7 +58,7 @@ namespace Assets.Scripts
             currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(currentY, currentX), ref rotationSmoothVelocity, rotationSmoothTime);
             transform.eulerAngles = currentRotation;
 
-            transform.position = lookAt.position - transform.forward * dstFromTarget;
+            transform.position = lookAt.position - transform.forward * Mathf.Clamp((dstFromTarget * dstFactor), 0, dstMax);
             //transform.localPosition = Vector3.Lerp(transform.localPosition, dollyDir * dstFromTarget, Time.deltaTime * rotationSmoothTime);
         }
 
@@ -66,13 +67,13 @@ namespace Assets.Scripts
         /// </summary>
         void CollisionDetect()
         {
-            var desiredCameraPos = transform.parent.TransformPoint(dollyDir * dstMinMax.y);
+            Vector3 desiredCameraPos = lookAt.position - transform.forward * dstFromTarget;//lookAt.TransformPoint(lookAt.position - transform.position * dstMinMax.y);
             RaycastHit hit;
 
-            if (Physics.Linecast(transform.parent.position, desiredCameraPos, out hit))
-                dstFromTarget = Mathf.Clamp((hit.distance * dstFactor), dstMinMax.x, dstMinMax.y);
+            if (Physics.Linecast(lookAt.position, desiredCameraPos, out hit))
+                dstFromTarget = hit.distance;
             else
-                dstFromTarget = dstMinMax.y;
+                dstFromTarget = Mathf.Lerp(dstFromTarget, dstMax, Time.deltaTime * depthSmoothTime);
         }
     }
 }
