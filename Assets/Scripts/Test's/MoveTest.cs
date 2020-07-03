@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System.ComponentModel;
+using UnityEngine;
+using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
 
 namespace Assets.Scripts
 {
@@ -11,31 +14,35 @@ namespace Assets.Scripts
     [AddComponentMenu("Mythirial Test/Move Test")]
     public class MoveTest : MonoBehaviour
     {
-        [SerializeField]
-        private float moveSpeed = 7.5f;
-        [SerializeField]
-        private float rotationSpeed = 15f;
-        [SerializeField]
-        private float jumpHeight = 6f;
-        [SerializeField]
-        private float groundDistance = 0.5f;
-        [SerializeField]
-        private float dashDistance = 5f;
-        [SerializeField]
-        private float fallMultiplier = 2.5f;
-        [Range(0, 1)]
-        public float airControlPercent;
+        [SerializeField] private Transform _wallChecker;
 
-        public Vector3 desiredMoveDirection;
-        public bool blockRotationPlayer;
+        [SerializeField] private float groundSpeed = 7.5f;
+        [SerializeField] private float rotationSpeed = 15f;
+        [SerializeField] private float jumpHeight = 6f;
+        [SerializeField] private float groundDistance = 0.5f; 
+        [SerializeField] private float dashDistance = 5f;
+        [SerializeField] private float groundOffSet = 0;
+        [SerializeField] private float fallMultiplier = 2.5f;
+        [Range(0, 1)]
+        public float AirControlPercent;
+        
+        private Vector3 _desiredMoveDirection;
+        public bool BlockRotationPlayer;
+        
+        [Header("LayerMasks",order = 0)]
         public LayerMask Ground;
+        public LayerMask Climbable;
+
+
+        [Header("Debug",order = 1)] 
+        [SerializeField] private bool _isGrounded;
+        [SerializeField] private bool _isClimbable;
 
         //private Animator animator;
         private Camera _camera;
         private Rigidbody _body;
         private Vector3 _input = Vector3.zero;
-        private bool _isGrounded = true;
-        private Transform _groundChecker;
+        private float _movementSpeed;
 
         /// <summary>
         /// Called in when this enters the scene
@@ -45,12 +52,11 @@ namespace Assets.Scripts
             //animator = GetComponentInChildren<Animator>();
             _camera = Camera.main;
             _body = GetComponent<Rigidbody>();
-            _groundChecker = transform;
         }
 
         private void Update()
         {
-            MOVE();
+            ComputeInput();
 
             if (Input.GetKey(KeyCode.Escape))
                 Cursor.lockState = CursorLockMode.None;
@@ -61,31 +67,49 @@ namespace Assets.Scripts
         /// </summary>
         private void FixedUpdate()
         {
-            MOVEPhysics();
+            CamLock();
+            MovePlayer();
         }
 
         /// <summary>
-        /// MOVE (Subject to change)
+        /// ComputeInput (Subject to change)
         /// Basis of the movement system
         /// </summary>
-        private void MOVE()
+        private void ComputeInput()
         {
             //animator.SetFloat("Speed", movement.magnitude);
 
-            _isGrounded = Physics.CheckSphere(_groundChecker.position, groundDistance, Ground, QueryTriggerInteraction.Ignore);
+           _isGrounded = Physics.Raycast(new Vector3(transform.position.x, transform.position.y + groundOffSet, transform.position.z), Vector3.down, groundDistance + groundOffSet, Ground);
+
+           Vector3 wallDirection = _wallChecker.transform.TransformDirection(Vector3.forward);
+           float distance = Vector3.Distance(transform.position, _wallChecker.position);
+            _isClimbable = Physics.Raycast(new Vector3(transform.position.x, transform.position.y + groundOffSet, transform.position.z), wallDirection,distance, Climbable);
 
             _input = Vector3.zero;
             _input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
             CamLock();
 
+            if (!_isGrounded)
+                _movementSpeed = groundSpeed * AirControlPercent;
+            else
+                _movementSpeed = groundSpeed;
+
+
             if (_input != Vector3.zero)
                 transform.forward = _input;
 
+            
             if (Input.GetButtonDown("Jump") && _isGrounded)
             {
                 _body.AddForce(Vector3.up * Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y), ForceMode.VelocityChange);
             }
+
+            if (_isClimbable)
+            {
+
+            }
+
 
             if (Input.GetButtonDown("Dash"))
             {
@@ -93,22 +117,27 @@ namespace Assets.Scripts
                 _body.AddForce(dashVelocity, ForceMode.VelocityChange);
             }
 
-            if (desiredMoveDirection.magnitude > 0)
+            if (_desiredMoveDirection.magnitude > 0)
             {
-                if (blockRotationPlayer == false)
+                if (BlockRotationPlayer == false)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), rotationSpeed); //Points in direction relative to the camera
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_desiredMoveDirection), rotationSpeed); //Points in direction relative to the camera
                 }
             }
         }
 
         /// <summary>
-        /// MOVE physics function
+        /// ComputeInput physics function
         /// </summary>
-        void MOVEPhysics()
+
+       private void OnDrawGizmos()
         {
-            CamLock();
-            _body.MovePosition(_body.position + desiredMoveDirection * moveSpeed * Time.fixedDeltaTime); //Moves us in the desiredWay
+            Vector3 fwd = _wallChecker.transform.TransformDirection(Vector3.forward);
+            Gizmos.DrawRay(transform.position, fwd);
+        }
+        void MovePlayer()
+        {
+            _body.MovePosition(_body.position + _desiredMoveDirection * _movementSpeed * Time.fixedDeltaTime); //Moves us in the desiredWay
             _body.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
         }
 
@@ -118,7 +147,6 @@ namespace Assets.Scripts
         /// </summary>
         void CamLock()
         {
-            var camera = Camera.main;
             var forward = _camera.transform.forward;
             var right = _camera.transform.right;
 
@@ -128,7 +156,7 @@ namespace Assets.Scripts
             forward.Normalize();
             right.Normalize();
 
-            desiredMoveDirection = forward * _input.z + right * _input.x;
+            _desiredMoveDirection = forward * _input.z + right * _input.x;
         }
     }
 }
